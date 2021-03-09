@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Expense Calculator</title>
+    <link rel="stylesheet" href="stylesheet.css">
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script> 
+  <script src="js/amazon-cognito-auth.min.js"></script>
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script> 
+  <script src="js/amazon-cognito-identity.min.js"></script>  
+  <script src="js/config.js"></script>
+  <script src="js/jwt-decode.js"></script>
+    <!---we had linked our css file----->
+</head>
+<body>
+    <div class="full-page">
+        <div class="navbar">
+            <div>
+                <a class="ahref" href='index.html'>Budget Calculator</a>
+            </div>
+            <nav>
+                <ul id='MenuItems'>
+                    <li><a href='index.html'>Home</a></li>
+                    <li><a href='login.html'>LogIn</a></li>
+                    <li><a href='index.html'>SignUp</a></li>
+                </ul>
+            </nav>
+        </div>
+       <br>
+       <br>
+       <br>
+       <div class="content">
+        <header>LogIn</header>
+        <form action="#">
+          <div class="field">
+            <span class="fa fa-envelope"></span>
+            <input type="text" id="inputUsername" name="username" required placeholder="Email or Phone">
+          </div>
+          <div class="field space">
+            <span class="fa fa-lock"></span>
+            <input type="password" id="inputPassword" name="password" class="pass-key" required placeholder="Password">
+            <span class="show">SHOW</span>
+          </div>
+          <div class="pass">
+            <a href="#">Forgot Password?</a>
+          </div>
+          <div class="field">
+            <input type="button" onclick="signInButton()" value="LOGIN">
+          </div>
+        </form>
+        <br>
+        <div class="signup">Don't have account?
+          <a href="index.html">Signup Here</a>
+        </div>
+      </div>
+    </div>
+    <script>
+      
+      const pass_field = document.querySelector('.pass-key');
+      const showBtn = document.querySelector('.show');
+      showBtn.addEventListener('click', function(){
+       if(pass_field.type === "password"){
+         pass_field.type = "text";
+         showBtn.textContent = "HIDE";
+         showBtn.style.color = "#3498db";
+       }else{
+         pass_field.type = "password";
+         showBtn.textContent = "SHOW";
+         showBtn.style.color = "#222";
+       }
+      });
+
+    </script>
+    <script>
+
+  function signInButton() {
+    var mail=document.getElementById("inputUsername").value;
+    
+  var authenticationData = {
+        Username : document.getElementById("inputUsername").value,
+        Password : document.getElementById("inputPassword").value,
+    };
+  
+    var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+    
+  var poolData = {
+        UserPoolId : _config.cognito.userPoolId, // Your user pool id here
+        ClientId : _config.cognito.clientId, // Your client id here
+    };
+  
+    var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+  
+    var userData = {
+        Username : document.getElementById("inputUsername").value,
+        Pool : userPool,
+    };
+  
+    var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+    
+  cognitoUser.authenticateUser(authenticationDetails, {
+        onSuccess: function (result) {
+      var accessToken = result.getAccessToken().getJwtToken();
+      console.log(accessToken); 
+      var decoded = jwt_decode(accessToken);
+      var id=decoded['sub'];
+        var params ={
+        "userid":id,
+        "mail":mail
+        };
+      
+      var xmlhttp = new XMLHttpRequest();
+       xmlhttp.open("POST","https://s1z3kfjg3a.execute-api.ap-south-1.amazonaws.com/dev");
+    xmlhttp.setRequestHeader("Content-Type", "application/json");
+    xmlhttp.send(JSON.stringify(params));
+    xmlhttp.onreadystatechange = function() {
+    if (xmlhttp.readyState === 4) {
+      var response = JSON.parse(xmlhttp.responseText);
+      if (xmlhttp.status === 200 ) {
+        console.log('successful');
+        window.location.href="expense.html";
+        //document.getElementById("titleheader").innerHTML = "Check your email for a verification link";
+        } else {
+          console.log('failed');
+      }
+    }
+  }
+      
+      
+        },
+
+        onFailure: function(err) {
+            alert(err.message || JSON.stringify(err));
+        },
+    });
+
+  }
+</script>
+    
+</body>
+</html>
