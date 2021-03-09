@@ -1,5 +1,5 @@
 # ExpenseCalculator
-A web application to track our monthly expenses
+A erverless web application to track our monthly expenses
 
 # Technology Stack
 
